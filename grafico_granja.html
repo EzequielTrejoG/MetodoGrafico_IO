@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programación Lineal - Método Gráfico</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        #myChart {
+            width: 100%;
+            height: 400px;  /* Cambiado a un tamaño más pequeño para móviles */
+            margin: 0 auto;
+            display: none;
+        }
+        #grafica, #puntosFac, #solucionProb {
+            display: none;
+        }
+        .custom-alert {
+            padding: 5px 15px; /* Ajusta el padding superior/inferior */
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-4">
+        <h1 class="text-center">Programación Lineal - Método Gráfico</h1>
+
+        <form id="plForm" class="mt-4">
+
+            <div class="card my-3">
+                <div class="card-body">
+                    <h3 class="card-title">Problema</h3>
+                    <div class="form-row">
+                        <div class="form-group col-md">
+                            <p style="text-align: justify;">
+                                En una granja agrícola se desea criar conejos y pollos como complemento en su
+                                economía, de forma que no se superen en conjunto las 180 horas mensuales destinadas
+                                a esta actividad. Su almacén solo puede albergar un máximo de 1000kg de pienso.
+                                Si se supone que un conejo necesita 20kg de pienso al mes y un pollo 10kg, que las
+                                horas mensuales de cuidados requeridos por un conejo son 3 y por un pollo son 2,
+                                y que los beneficios que reportaría su venta asciende a 500 y 300 pesetas por cabeza
+                                respectivamente, hallar el número de animales que deben criarse para que el beneficio
+                                sea máximo.  
+                                En la siguiente tabla, se resume los datos: 
+                            </p>
+                            <table class="table table-bordered table-sm text-center mb-0">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th></th>
+                                        <th>Conejos (x)</th>
+                                        <th>Pollos (y)</th>
+                                        <th>Disponibilidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Pienso</td>
+                                        <td>20kg</td>
+                                        <td>10kg</td>
+                                        <td>1000kg</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Horas</td>
+                                        <td>3hrs</td>
+                                        <td>2hrs</td>
+                                        <td>180hrs</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Pesetas</b></td>
+                                        <td><b>500</b></td>
+                                        <td><b>300</b></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Maximización o Minimización</h3>
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label>Objetivo</label>
+                            <select class="form-control" id="tipoProblema">
+                                <option value="">[Selecciona]</option>
+                                <option value="Minimizar">Minimizar</option>
+                                <option value="Maximizar">Maximizar</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h3 class="card-title">Función Objetivo</h3>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="coefX">Coeficiente de X</label>
+                            <input type="text" inputmode="numeric" class="form-control numeric-input" id="coefX" 
+                            placeholder="Coeficiente de X" required step="any">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="coefY">Coeficiente de Y</label>
+                            <input type="text" inputmode="numeric" class="form-control numeric-input" id="coefY" 
+                            placeholder="Coeficiente de Y" required step="any">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h3 class="card-title">Restricciones</h3>
+                    <div class="alert alert-info custom-alert">
+                        <b>Las restricciones de NO NEGATIVIDAD ya están incluidas.</b>
+                    </div>                    
+                    <div id="restricciones">
+                        <div class="form-row" style="display: none;">
+                            <div class="form-group col-md-4">
+                                <label>Coeficiente de X</label>
+                                <input type="number" class="form-control" placeholder="Coeficiente de X" required step="any"
+                                value="1" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Coeficiente de Y</label>
+                                <input type="number" class="form-control" placeholder="Coeficiente de Y" required step="any"
+                                value="0" readonly>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Operador</label>
+                                <select class="form-control">
+                                    <option value=">=" selected>&ge;</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Solución</label>
+                                <input type="number" class="form-control" placeholder="Valor" required step="any"
+                                value="0" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row" style="display: none;">
+                            <div class="form-group col-md-4">
+                                <label>Coeficiente de X</label>
+                                <input type="number" class="form-control" placeholder="Coeficiente de X" required step="any"
+                                value="0" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Coeficiente de Y</label>
+                                <input type="number" class="form-control" placeholder="Coeficiente de Y" required step="any"
+                                value="1" readonly>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Operador</label>
+                                <select class="form-control">
+                                    <option value=">=" selected>&ge;</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label>Solución</label>
+                                <input type="number" class="form-control" placeholder="Valor" required step="any"
+                                value="0" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-md" onclick="agregarRestriccion()">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary btn-block mt-4 my-4"><b>Resolver</b></button>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-success btn-block mt-4 my-4 text-white" onclick="limpiar()"><b>Limpiar</b></button>
+                </div>
+            </div>            
+
+        </form>
+
+        <div class="card mt-3" id="grafica">
+            <div class="card-body">
+                <h3 class="card-title">Gráfica</h3>
+                <div class="mt-5">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3" id="puntosFac">
+            <div class="card-body">
+                <h3 class="card-title">Puntos Factibles</h3>
+                <div id="puntos">
+                    <div id="puntosFactibles" class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="text-center table-primary">
+                                <tr>
+                                    <th colspan="3" style="border-bottom: none;">
+                                        <div id="funcionObjetivo"></div>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th>Punto</th>
+                                    <th>Coordenada (x,y)</th>
+                                    <th>Valor en Z</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaPuntos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3 my-3" id="solucionProb">
+            <div class="card-body">
+                <h3 class="card-title">Solución</h3>
+                <div id="funcionObjetivo"></div>
+                <div id="solucion">
+                    <div id="solucion">Ingrese las restricciones y la función objetivo para ver la solución.</div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+
+        // Selecciona todos los inputs con la clase 'numeric-input' para permitir solo numeros
+        const numericInputs = document.querySelectorAll('.numeric-input');
+
+        numericInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                // Permitir solo números y un punto decimal
+                this.value = this.value.replace(/[^0-9.]/g, '');
+
+                // Asegurarse de que solo haya un punto decimal
+                const parts = this.value.split('.');
+                if (parts.length > 2) {
+                    this.value = parts[0] + '.' + parts.slice(1).join('');
+                }
+            });
+        });
+
+        function soloNumeros(element) {
+            const numericInputs = element.querySelectorAll('.numeric-input');
+
+            numericInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Permitir solo números y un punto decimal
+                    this.value = this.value.replace(/[^0-9.]/g, '');
+
+                    // Asegurarse de que solo haya un punto decimal
+                    const parts = this.value.split('.');
+                    if (parts.length > 2) {
+                        this.value = parts[0] + '.' + parts.slice(1).join('');
+                    }
+                });
+            });
+        }
+
+        document.getElementById("plForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            resolverPL();
+        });
+
+        function limpiar() {
+            document.getElementById("tipoProblema").value = '';
+            document.getElementById("coefX").value = '';
+            document.getElementById("coefY").value = '';
+            const restriccionesContainer = document.getElementById("restricciones");
+
+            // Selecciona todas las filas de restricciones que no están ocultas (las agregadas dinámicamente)
+            const restriccionesAgregadas = restriccionesContainer.querySelectorAll('.form-row:not([style*="display: none"])');
+
+            // Remueve cada fila de restricciones agregada
+            restriccionesAgregadas.forEach(restriccion => restriccion.remove());
+
+            // Ocultar completamente los elementos
+            document.getElementById("grafica").style.display = 'none';
+            document.getElementById("puntosFac").style.display = 'none';
+            document.getElementById("solucionProb").style.display = 'none';
+
+        }
+        
+        function agregarRestriccion() {
+            x = document.getElementById("coefX").value;
+            y = document.getElementById("coefY").value;
+
+            if((x == "" && y == "")){
+                alert("Agrega la función objetivo");
+            }else if (x == ""){
+                alert("Escribe el valor de 'x' en la función objetivo")
+            }else if (y == ""){
+                alert("Escribe el valor de 'y' en la función objetivo")
+            }else{
+                const restriccionesDiv = document.getElementById("restricciones");
+                const nuevaRestriccion = document.createElement("div");
+                nuevaRestriccion.className = "form-row mt-2";
+                
+                nuevaRestriccion.innerHTML = `
+                    <div class="form-group col-md-3">
+                        <input type="text" inputmode="numeric" class="form-control numeric-input" placeholder="Coeficiente de X" required step='any'>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <input type="text" inputmode="numeric" class="form-control numeric-input" placeholder="Coeficiente de Y" required step='any'>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <select class="form-control">
+                            <option value="<=">&le;</option>
+                            <option value=">=">&ge;</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 d-flex">
+                        <input type="text" inputmode="numeric" class="form-control numeric-input" placeholder="Solución" required step='any'>
+                        <button type="button" class="btn btn-danger btn-md ml-2 eliminar-restriccion">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                // Agregar la nueva restriccion para validar solo entrada de numeros
+                soloNumeros(nuevaRestriccion);
+
+                // Agregar la nueva restricción al contenedor
+                restriccionesDiv.appendChild(nuevaRestriccion);
+
+                // Asignar el evento para eliminar la restricción al botón
+                nuevaRestriccion.querySelector('.eliminar-restriccion').addEventListener('click', function() {
+                    restriccionesDiv.removeChild(nuevaRestriccion);
+                });
+            }
+        }
+
+        function resolverPL() {
+            const coefX = parseFloat(document.getElementById("coefX").value);
+            const coefY = parseFloat(document.getElementById("coefY").value);
+            const tipoProblema = document.getElementById("tipoProblema").value;
+
+            const restricciones = [];
+            const restriccionesDiv = document.getElementById("restricciones").children;
+
+            if(restriccionesDiv.length == 2){
+                alert("Ingresa las restricciones");
+            } else{
+                for (let i = 0; i < restriccionesDiv.length; i++) {
+                    const inputs = restriccionesDiv[i].getElementsByTagName("input");
+                    const operador = restriccionesDiv[i].getElementsByTagName("select")[0].value;
+                    restricciones.push({
+                        coefX: parseFloat(inputs[0].value),
+                        coefY: parseFloat(inputs[1].value),
+                        operador: operador,
+                        valor: parseFloat(inputs[2].value)
+                    });
+                }
+
+                let puntosInterseccion = [];
+                let lineas = [];
+
+                restricciones.forEach((restriccion) => {
+                    const x0 = 0;
+                    const y0 = restriccion.valor / restriccion.coefY; 
+                    const x1 = restriccion.valor / restriccion.coefX; 
+                    lineas.push({ x0, y0, x1, y1: 0 });
+                });
+
+                for (let i = 0; i < restricciones.length; i++) {
+                    for (let j = i + 1; j < restricciones.length; j++) {
+                        const r1 = restricciones[i];
+                        const r2 = restricciones[j];
+                        const denom = r1.coefX * r2.coefY - r2.coefX * r1.coefY;
+
+                        if (denom !== 0) {
+                            const x = (r1.valor * r2.coefY - r2.valor * r1.coefY) / denom;
+                            const y = (r1.coefX * r2.valor - r2.coefX * r1.valor) / denom;
+                            puntosInterseccion.push({ x, y });
+                        }
+                    }
+                }
+
+                const puntosFactibles = puntosInterseccion.filter(punto => {
+                    return restricciones.every(restriccion => {
+                        const evaluacion = restriccion.coefX * punto.x + restriccion.coefY * punto.y;
+                        return restriccion.operador === "<=" ? evaluacion <= restriccion.valor : evaluacion >= restriccion.valor;
+                    });
+                });
+
+                let solucionOptima = null;
+                let valorOptimo;
+
+                if (tipoProblema === "Maximizar") {
+                    valorOptimo = -Infinity;
+                } else if (tipoProblema === "Minimizar") {
+                    valorOptimo = Infinity;
+                } else {
+                    alert("Por favor selecciona si el problema es de Minimización o Maximización.");
+                    return;
+                }
+
+                puntosFactibles.forEach(punto => {
+                    const valorObjetivo = coefX * punto.x + coefY * punto.y;
+                    if ((tipoProblema === "Maximizar" && valorObjetivo > valorOptimo) || 
+                        (tipoProblema === "Minimizar" && valorObjetivo < valorOptimo)) {
+                        valorOptimo = valorObjetivo;
+                        solucionOptima = punto;
+                    }
+                });
+
+                const solucionDiv = document.getElementById("solucion");
+
+                if (solucionOptima) {
+                    solucionDiv.style.backgroundColor = "#D3F9BB";
+                    solucionDiv.className = "alert";
+                    solucionDiv.innerHTML = `<span style="color: #049632; font-size: 20px;">
+                    <strong>F.O = ${coefX}x + ${y}y</strong><br>
+                    La solución óptima es:<br>
+                    X = <strong> ${solucionOptima.x.toFixed(0)} </strong><br>
+                    Y = <strong> ${solucionOptima.y.toFixed(0)} </strong><br>
+                    Z = <strong> ${valorOptimo.toFixed(0)} </strong></span><br>
+                    Por lo tanto la granja agrícola debe criar ${solucionOptima.x.toFixed(0)} conejos 
+                    y ${solucionOptima.y.toFixed(0)} pollos con un beneficio máximo de  
+                    ${valorOptimo.toFixed(0)} pesetas`;
+                } else {
+                    solucionDiv.className = "alert alert-danger";
+                    solucionDiv.innerHTML = `<span style="font-size: 20px;">No se encontró una solución factible.</span>`;
+                }
+
+                document.getElementById("grafica").style.display = "block";
+                document.getElementById("myChart").style.display = "block";
+                document.getElementById("puntosFac").style.display = "block";
+                document.getElementById("solucionProb").style.display = "block";
+
+                mostrarPuntosFactibles(puntosFactibles, coefX, coefY);
+                graficar(lineas, puntosFactibles);
+            }
+        }
+
+        function mostrarPuntosFactibles(puntosFactibles, coefX, coefY) {
+            const tablaPuntos = document.getElementById("tablaPuntos");
+            tablaPuntos.innerHTML = "";
+
+            if (puntosFactibles.length > 0) {
+                puntosFactibles.forEach((punto, index) => {
+                    const valorObjetivo = coefX * punto.x + coefY * punto.y;
+                    const funcionObjetivo = document.getElementById("funcionObjetivo");
+                    funcionObjetivo.innerHTML = `<strong>Z = ${coefX}x + ${y}y</strong>`;
+                    const fila = `
+                        <tr class='text-center'>
+                            <td> ${String.fromCharCode(65 + index)} </td>
+                            <td>(${punto.x.toFixed(0)}, ${punto.y.toFixed(0)})</td>
+                            <td>${valorObjetivo.toFixed(0)} </td>
+                        </tr>
+                    `;
+                    tablaPuntos.innerHTML += fila;
+                });
+            } else {
+                tablaPuntos.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center">No hay puntos factibles.</td>
+                    </tr>
+                `;
+            }
+        }
+
+        let myChart = null;
+
+        function graficar(lineas, puntosFactibles) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const chartData = {
+                datasets: []
+            };
+
+            // Encontrar los valores mínimos y máximos de x e y de las restricciones
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+            // Añadir las líneas de las restricciones al gráfico
+            lineas.forEach((linea, index) => {
+                const data = [
+                    { x: linea.x0, y: linea.y0 },
+                    { x: linea.x1, y: linea.y1 }
+                ];
+
+                // Actualizar los límites de los ejes
+                minX = Math.min(minX, linea.x0, linea.x1);
+                maxX = Math.max(maxX, linea.x0, linea.x1);
+                minY = Math.min(minY, linea.y0, linea.y1);
+                maxY = Math.max(maxY, linea.y0, linea.y1);
+
+                chartData.datasets.push({
+                    label: `Restricción ${index + 1}`,
+                    data: data,
+                    borderColor: '#0069D9',  // Color de las líneas color azul
+                    fill: false,
+                    showLine: true,
+                    pointRadius: 0, 
+                    borderWidth: 2,
+                    datalabels: {
+                        display: false  // Deshabilitar etiquetas para restricciones
+                    }
+                });
+            });
+
+            // Ordenar los puntos factibles en sentido antihorario usando el angulo polar
+            if (puntosFactibles.length > 0) {
+                const centroide = {
+                    x: puntosFactibles.reduce((sum, p) => sum + p.x, 0) / puntosFactibles.length,
+                    y: puntosFactibles.reduce((sum, p) => sum + p.y, 0) / puntosFactibles.length
+                };
+
+                puntosFactibles.sort((a, b) => {
+                    const anguloA = Math.atan2(a.y - centroide.y, a.x - centroide.x);
+                    const anguloB = Math.atan2(b.y - centroide.y, b.x - centroide.x);
+                    return anguloA - anguloB;
+                });
+
+                // Anadir el poligono de la region factible
+                const polygonData = puntosFactibles.map(punto => ({
+                    x: punto.x,
+                    y: punto.y
+                }));
+
+                // Cerrar el polígono conectando el último punto con el primero
+                polygonData.push({ x: puntosFactibles[0].x, y: puntosFactibles[0].y });
+
+                // Asegurarse de que el poligono este correctamente sombreado
+                chartData.datasets.push({
+                    label: 'Región factible',
+                    data: polygonData,
+                    borderColor: '#63dc57',  // Borde verde claro para el polígono 
+                    backgroundColor: 'rgba(99, 220, 87, 0.5)',  // Fondo verde claro con transparencia
+                    fill: true,  // Rellenar el área de la región factible
+                    showLine: true,
+                    pointRadius: 0,  // No mostrar puntos en los vértices del polígono
+                    borderWidth: 5,
+                    datalabels: {
+                        display: false  // Deshabilitar etiquetas para restricciones
+                    }
+                });
+
+                // Actualizar los límites de los ejes con los puntos factibles
+                puntosFactibles.forEach(punto => {
+                    minX = Math.min(minX, punto.x);
+                    maxX = Math.max(maxX, punto.x);
+                    minY = Math.min(minY, punto.y);
+                    maxY = Math.max(maxY, punto.y);
+                });
+            }
+
+            // Añadir los puntos factibles al gráfico con sus etiquetas de coordenadas
+            puntosFactibles.forEach((punto, index) => {
+                const letra = String.fromCharCode(65 + index);  // A, B, C, ...
+                chartData.datasets.push({
+                    label: `${letra}`,  
+                    data: [{ x: punto.x, y: punto.y }],
+                    backgroundColor: 'rgba(255, 0, 0, 1)',  // Rojo para los puntos factibles
+                    pointRadius: 6, 
+                    showLine: false,
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: {
+                            weight: 'bold',  
+                            size: 12  
+                        },
+                        formatter: function(value, context) {
+                            return `${letra}(${value.x.toFixed(0)}, ${value.y.toFixed(0)})`;
+                        }
+                    }
+                });
+
+                // Actualizar los límites de los ejes
+                minX = Math.min(minX, punto.x);
+                maxX = Math.max(maxX, punto.x);
+                minY = Math.min(minY, punto.y);
+                maxY = Math.max(maxY, punto.y);
+            });
+
+            // Destruir el grafico anterior si existe
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            // Crear el nuevo gráfico
+            myChart = new Chart(ctx, {
+                type: 'scatter',
+                data: chartData,
+                options: {
+                    scales: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: Math.floor(minX - 1),
+                            max: Math.ceil(maxX + 1)
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'bottom',
+                            min: Math.floor(minY - 1),
+                            max: Math.ceil(maxY + 1)
+                        }
+                    },
+                    datalabels: {
+                        color: 'black',
+                        formatter: function(value, context) {
+                            const letra = String.fromCharCode(65 + context.dataIndex);  // A, B, C, ...
+                            return `${letra}(${value.x.toFixed(0)}, ${value.y.toFixed(0)})`;  // Mostrar A(x, y)
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+    </script>
+    
+</body>
+</html>
